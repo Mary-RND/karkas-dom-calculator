@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Калькулятор стоимости каркасного дома</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">КД</div>
+    <div>
+      <h1>Калькулятор стоимости каркасного дома</h1>
+      <p class="sub">Локальное приложение · расчёт по прайсу строительной компании</p>
+    </div>
+  </div>
+  <div class="toolbar">
+    <label class="btn ghost">
+      Загрузить данные
+      <input type="file" id="fileInput" accept=".xlsx" hidden>
+    </label>
+    <button class="btn ghost" id="btnOnline">Обновить данные</button>
+    <button class="btn ghost" id="btnExport">Экспорт</button>
+    <button class="btn" id="btnResult">Показать итог</button>
+    <button class="btn ghost" id="btnReset">Новый расчёт</button>
+    <button class="btn ghost" id="btnQuit" title="Закрыть приложение">✕ Закрыть приложение</button>
+  </div>
+</header>
+
+<div class="statusbar">
+  <span id="status" class="status">Загрузка данных…</span>
+  <span id="source" class="source"></span>
+</div>
+
+<main class="layout">
+  <section class="panel">
+    <h2>1. Параметры объекта</h2>
+    <p class="hint">Ползунки задают объём работ. От них зависит количество позиций в смете.</p>
+
+    <div class="field">
+      <label>Площадь дома, м² <b id="vArea">120</b></label>
+      <input type="range" id="area" min="40" max="300" step="1" value="120">
+    </div>
+    <div class="field">
+      <label>Периметр стен, пог. м <b id="vPerim">44</b></label>
+      <input type="range" id="perim" min="20" max="120" step="1" value="44">
+    </div>
+    <div class="field">
+      <label>Площадь фасада, м² <b id="vFacade">160</b></label>
+      <input type="range" id="facade" min="50" max="600" step="5" value="160">
+    </div>
+    <div class="field">
+      <label>Площадь кровли, м² <b id="vRoof">150</b></label>
+      <input type="range" id="roof" min="50" max="500" step="5" value="150">
+    </div>
+    <div class="field">
+      <label>Остекление, м² <b id="vGlass">26</b></label>
+      <input type="range" id="glass" min="5" max="120" step="1" value="26">
+    </div>
+    <div class="field">
+      <label>Винтовые сваи, шт. <b id="vPiles">40</b></label>
+      <input type="range" id="piles" min="0" max="120" step="1" value="40">
+    </div>
+    <div class="field">
+      <label>Терраса / навес, м² <b id="vExtra">0</b></label>
+      <input type="range" id="extra" min="0" max="120" step="1" value="0">
+    </div>
+
+    <h2>2. Уровень цен и бюджет</h2>
+    <div class="field">
+      <label>Уровень цен в прайсе: <b id="vLevel">базовый</b></label>
+      <input type="range" id="level" min="0" max="100" step="1" value="50">
+      <div class="scale"><span>минимальный</span><span>базовый</span><span>максимальный</span></div>
+    </div>
+    <div class="field">
+      <label>Резерв на непредвиденное, % <b id="vReserve">12</b></label>
+      <input type="range" id="reserve" min="0" max="20" step="1" value="12">
+    </div>
+    <div class="field check">
+      <label><input type="checkbox" id="optNaklad" checked> Доставка и накладные расходы (из прайса)</label>
+    </div>
+    <div class="field check">
+      <label><input type="checkbox" id="optOver"> Независимый технический надзор</label>
+    </div>
+    <div class="field check">
+      <label><input type="checkbox" id="optClean" checked> Финальная уборка</label>
+    </div>
+  </section>
+
+  <section class="panel wide">
+    <h2>3. Комплектация</h2>
+    <p class="hint">Галочка — позиция попадает в смету. Красные статусы («Вариант», «Опция») выключены по умолчанию.</p>
+    <div id="sections" class="sections"></div>
+  </section>
+
+  <aside class="panel result" id="resultPanel">
+    <h2>Итог</h2>
+    <div class="total">
+      <span>Стоимость объекта</span>
+      <b id="total">— ₽</b>
+    </div>
+    <div class="perM2"><span>Цена за м²</span><b id="perM2">— ₽</b></div>
+    <div class="mini">
+      <div><span>Позиций в смете</span><b id="cnt">0</b></div>
+      <div><span>Материалы и работы</span><b id="sub">— ₽</b></div>
+      <div><span>Резерв</span><b id="res">— ₽</b></div>
+    </div>
+    <h3>Разбивка по разделам</h3>
+    <div id="breakdown" class="breakdown"></div>
+    <button class="btn full" id="btnResult2">Показать итог</button>
+  </aside>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-box">
+    <h3>Обновление данных из онлайн-таблицы</h3>
+    <p class="hint">Вставьте ссылку на онлайн-таблицу с прайсом (Яндекс.Диск, режим «Просмотр»).</p>
+    <input type="text" id="onlineUrl" placeholder="https://…" value="https://storage.yandexcloud.net/image-lessons/images_1787898134995-d02bd918d44f-e6ae4267d31516983cb5.xlsx">
+    <div class="modal-actions">
+      <button class="btn ghost" id="onlineCancel">Отмена</button>
+      <button class="btn" id="onlineGo">Обновить</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
